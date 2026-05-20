@@ -39,6 +39,7 @@ vertically, or diagonally — wins the game.
 - [Step 5. UI Feedback](#step-5-ui-feedback)
 - [Step 6. Full Code — Copy and Paste](#step-6-full-code--copy-and-paste)
 - [Step 7. Shipping the Game — Packaging Your Files](#step-7-shipping-the-game--packaging-your-files)
+- [Step 8. Play with Friends: Adding P2P Multiplayer](#step-8-play-with-friends-adding-p2p-multiplayer)
 
 ---
 
@@ -512,6 +513,56 @@ Once you've completed the tutorial, try adding these features — all inside `Ga
 | **Restart on keypress** | In `Update()`, detect `GetAsyncKeyState('R')` and re-run the same initialization logic as `OnLoad` |
 | **AI opponent** | In `Update()`, when `m_currentTurn == 2`, scan the board and pick the best available cell automatically |
 | **Stone counter** | Use `std::to_string` to display `"Black: 5 stones"` via `SetGameStatusText` |
+
+---
+
+---
+
+## Step 8. Play with Friends: Adding P2P Multiplayer
+
+Solo play is great — but playing against a real person is even better! Add just a few lines of Windows socket code (Winsock2) to the `GameLogic.cpp` you just built, and you can connect two computers for a fully online Gomoku match.
+
+No dedicated server required. One player becomes the Host and the other becomes the Client. They send each other the stone coordinates (row, col) in real time — that's the entire protocol.
+
+### 8-1. How It Works
+
+```
+[Host PC]                                  [Client PC]
+ Engine.exe running                         Engine.exe running
+   │                                          │
+   H key → open listen socket                C key → connect to host
+   │                                          │
+   ◄──────────── TCP connection ─────────────►
+   │                                          │
+   Click tile → send(row, col) ─────────────► receive → place stone on board
+                                               Click tile → send(row, col)
+   ◄──────────────────────────────────────────  receive → place stone on board
+```
+
+### 8-2. Why This Is Achievable
+
+`GameLogic.cpp` is a standard Windows DLL.
+A single `#include <winsock2.h>` gives you access to Windows' built-in socket library.
+**The engine core stays completely untouched.**
+
+| What to Add | Purpose |
+|-------------|---------|
+| `#include <winsock2.h>` | Socket API access |
+| `#pragma comment(lib, "ws2_32.lib")` | Auto-link ws2_32.dll at compile time |
+| `ioctlsocket(FIONBIO)` | Non-blocking mode — game loop never stalls |
+| `recv()` in `Update()` | Check for the opponent's move every frame |
+| `send()` in `OnObjectClicked()` | Transmit coordinates when placing a stone |
+
+### 8-3. Your Next Step
+
+The full step-by-step code and implementation details are covered in **Tutorial 03**.
+Give it a try right now!
+
+> 📖 **[Tutorial 03 — P2P Multiplayer Gomoku](Tutorial_03_Multiplayer_P2P_EN.md)**
+>
+> Open `Tutorial_03_Multiplayer_P2P_EN.md` in the same folder as this file and upgrade
+> your `GameLogic.cpp` to a full online multiplayer version.
+> The board stays exactly as-is — you're only adding network code. That's it. 🚀
 
 ---
 

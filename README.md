@@ -248,6 +248,8 @@ BOARD/
 ├── MakeSDK.ps1                  ← SDK 자동 추출 스크립트
 ├── Tutorial_01_Gomoku.md        ← 오목 제작 튜토리얼 (한국어)
 ├── Tutorial_01_Gomoku_EN.md     ← Gomoku tutorial (English)
+├── Tutorial_03_Multiplayer_P2P.md    ← P2P 멀티플레이어 튜토리얼 (한국어)
+├── Tutorial_03_Multiplayer_P2P_EN.md ← P2P Multiplayer tutorial (English)
 │
 ├── BoardEngine_SDK/             ← MakeSDK.ps1 실행 후 생성 (배포용)
 │   ├── Engine.exe / shaders.hlsl / assets/
@@ -294,6 +296,8 @@ BOARD/
 |------|------|
 | [`Tutorial_01_Gomoku.md`](Tutorial_01_Gomoku.md) | 오목(五目) 2인 대전 게임 제작 (한국어) |
 | [`Tutorial_01_Gomoku_EN.md`](Tutorial_01_Gomoku_EN.md) | Gomoku (Five in a Row) — Two-Player (English) |
+| [`Tutorial_03_Multiplayer_P2P.md`](Tutorial_03_Multiplayer_P2P.md) | Winsock2 P2P 멀티플레이어 연동 (한국어) |
+| [`Tutorial_03_Multiplayer_P2P_EN.md`](Tutorial_03_Multiplayer_P2P_EN.md) | Winsock2 P2P Multiplayer — Online Play (English) |
 
 ---
 
