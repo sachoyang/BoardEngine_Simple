@@ -8,14 +8,14 @@
 ## 🚨 절대 규칙: 엔진 코어를 건드리지 마세요!
 
 ```
-❌ Engine/ 폴더 안의 파일은 절대 수정하지 마세요.
-   Engine.h, Engine.cpp, SpriteRenderer.h, Transform.h 등 모두 봉인 상태입니다.
+❌ include/ 폴더 안의 헤더는 절대 수정하지 마세요.
+   IEngineAPI.h, IGameLogic.h, GameObject.h 등 모두 읽기 전용입니다.
 
 ✅ 수정해도 되는 파일은 딱 하나입니다.
-   Engine/GameLogic/GameLogic.cpp
+   GameLogic/GameLogic.cpp
 ```
 
-엔진은 이미 완성되어 있습니다. 여러분이 해야 할 일은 `GameLogic.cpp`에 게임 규칙을 작성하는 것뿐입니다. 엔진 코어를 건드리면 다른 게임 튜토리얼도 함께 망가집니다. 꼭 지켜주세요.
+SDK 패키지에는 엔진 소스가 포함되어 있지 않습니다. 여러분이 해야 할 일은 `GameLogic/GameLogic.cpp`에 게임 규칙을 작성하는 것뿐입니다. `include/` 헤더를 수정하면 다음 SDK 업데이트 시 덮어씌워집니다. 꼭 지켜주세요.
 
 ---
 
@@ -37,7 +37,7 @@
 - [Step 4. 승리 판정 알고리즘](#step-4-승리-판정-알고리즘)
 - [Step 5. UI 피드백](#step-5-ui-피드백)
 - [Step 6. 완성 코드 전체 붙여넣기](#step-6-완성-코드-전체-붙여넣기)
-- [Step 7. 게임 배포 — STANDALONE_MODE 1로 빌드하기](#step-7-게임-배포--standalone_mode-1로-빌드하기)
+- [Step 7. 게임 배포 — 패키지 구성하기](#step-7-게임-배포--패키지-구성하기)
 
 ---
 
@@ -49,7 +49,7 @@
 아래 경로에 복사해 두세요.
 
 ```
-Engine/Engine/assets/
+assets/
 ├── black.png     ← 흑돌 이미지 (예: 검은 원이 그려진 64×64 PNG)
 ├── white.png     ← 백돌 이미지 (예: 흰 원이 그려진 64×64 PNG)
 └── click.wav     ← 돌 놓는 효과음 (짧은 클릭음)
@@ -61,12 +61,10 @@ Engine/Engine/assets/
 
 ### 1-2. 보드 씬 만들기
 
-1. `Engine.h`에서 `STANDALONE_MODE`가 `0`인지 확인합니다.
-   ```cpp
-   #define STANDALONE_MODE 0   // 에디터 모드여야 합니다
-   ```
+1. SDK 루트 폴더에서 `Engine.exe`를 더블클릭해 실행합니다.
+   에디터가 실행되면 준비 완료입니다.
 
-2. 엔진을 빌드하고 실행합니다 (F5).
+2. (아무 내용도 나타나지 않는 것은 정상입니다. 아직 씬이 없으므로 빈 화면이 나타납니다.)
 
 3. 에디터 **Board Generator** 창에서 다음과 같이 설정합니다.
 
@@ -305,7 +303,7 @@ private:
 
 ## Step 6. 완성 코드 전체 붙여넣기
 
-아래 코드를 `Engine/GameLogic/GameLogic.cpp` 에 **전체 교체**하여 붙여넣으세요.
+아래 코드를 `GameLogic/GameLogic.cpp` 에 **전체 교체**하여 붙여넣으세요.
 
 ```cpp
 // GameLogic.cpp — 오목(Gomoku) 2인 대전 구현
@@ -447,85 +445,60 @@ extern "C" __declspec(dllexport) IGameLogic* CreateGameLogic()
 
 ### 빌드 및 테스트
 
-1. Visual Studio 에서 **GameLogic 프로젝트만** 빌드합니다 (Ctrl+B 또는 우클릭 → Build).
-2. 엔진이 실행 중이라면 0.5초 안에 **자동으로 DLL 을 핫 리로드**합니다.
-   (로그 창에 `[Gomoku] Gomoku started.` 가 출력되면 성공)
-3. 메뉴바 **[ Play ]** 를 눌러 Play Mode 로 진입합니다.
-4. 타일을 클릭해 흑/백 돌이 번갈아 나타나는지 확인합니다.
-5. 5개를 연속으로 놓아 승리 텍스트가 뜨는지 확인합니다.
+1. `GameLogic/GameLogic_SDK.sln` 을 Visual Studio 2022 에서 엽니다.
+2. **빌드 → 솔루션 빌드** (Ctrl+Shift+B). `GameLogic.dll` 이 `Engine.exe` 옆에 자동 출력됩니다.
+3. `Engine.exe` 를 실행하고 **GameLogic → Load GameLogic.dll** 을 클릭합니다.
+4. 메뉴바 **[ Play ]** 를 눌러 Play Mode 로 진입합니다.
+5. 타일을 클릭해 흑/백 돌이 번갈아 나타나는지 확인합니다.
+6. 5개를 연속으로 놓아 승리 텍스트가 뜨는지 확인합니다.
 
 ---
 
-## Step 7. 게임 배포 — STANDALONE_MODE 1로 빌드하기
+## Step 7. 게임 배포 — 패키지 구성하기
 
-에디터 없이 순수한 오목 게임 실행 파일을 만듭니다.
+SDK 버전은 `Engine.h` 소스 파일이 포함되어 있지 않으므로 엔진을 재빌드할 수 없습니다.
+대신, SDK 폴더에 이미 들어 있는 파일들을 그대로 묶어 배포하면 됩니다.
 
-### 7-1. 에셋 확인
+### 7-1. 배포 파일 체크리스트
 
-배포 패키지에 필요한 파일이 모두 있는지 체크하세요.
-
-```
-Engine/x64/Release/assets/
-├── scene.json    ← Step 1에서 저장한 15×15 씬
-├── black.png     ← 흑돌 이미지
-├── white.png     ← 백돌 이미지
-└── click.wav     ← 효과음
-```
-
-> `assets/` 폴더가 `x64/Release/` 아래에 없다면, `Engine/Engine/assets/` 폴더를 통째로 복사하세요.
-
-### 7-2. 매크로 변경
-
-`Engine/Engine/Engine.h` 최상단에서 딱 한 줄만 바꿉니다.
-
-```cpp
-// Before
-#define STANDALONE_MODE 0
-
-// After
-#define STANDALONE_MODE 1
-```
-
-### 7-3. Release 빌드
-
-1. 빌드 구성을 **Release** 로 변경합니다 (상단 드롭다운).
-2. **빌드 → 솔루션 빌드** (Ctrl+Shift+B).
-3. `Engine/x64/Release/` 에 파일이 생성됩니다.
-
-```
-x64/Release/
-├── Engine.exe      ← 에디터 UI 없는 순수 게임 실행 파일
-├── GameLogic.dll   ← 오목 로직
-└── assets/
-    ├── scene.json
-    ├── black.png
-    ├── white.png
-    └── click.wav
-```
-
-### 7-4. 배포 패키지 구성
-
-위 4개 항목을 하나의 폴더에 담아 전달하면 완성입니다!
+게이머에게 전달할 패키지에 아래 4가지가 모두 있는지 확인하세요.
 
 ```
 내_오목게임/
-├── Engine.exe
-├── GameLogic.dll
+├── Engine.exe          ← SDK 에 포함된 실행 파일 (그대로 사용)
+├── GameLogic.dll       ← Step 6 빌드 결과물
+├── shaders.hlsl        ← 🚨 반드시 포함 — 없으면 실행 즉시 에러 발생
 └── assets/
-    ├── scene.json
-    ├── black.png
-    ├── white.png
-    └── click.wav
+    ├── scene.json      ← Step 1 에서 저장한 15×15 보드 씬
+    ├── black.png       ← 흑돌 이미지
+    ├── white.png       ← 백돌 이미지
+    └── click.wav       ← 효과음
 ```
 
-### 7-5. 배포 후 에디터로 돌아오기
+### 7-2. 패키지 구성 및 전달
 
-```cpp
-// Engine.h 를 다시 되돌립니다
-#define STANDALONE_MODE 0
+위 파일들을 하나의 폴더에 담고 압축 파일(`.zip`)로 묶어 전달하면 완성입니다!
+
+```
+내_오목게임.zip
+└── 내_오목게임/
+    ├── Engine.exe
+    ├── GameLogic.dll
+    ├── shaders.hlsl
+    └── assets/
+        ├── scene.json
+        ├── black.png
+        ├── white.png
+        └── click.wav
 ```
 
-이후 Debug 빌드로 돌아오면 에디터 모드가 복구됩니다.
+> **게이머 입장에서:** 압축을 풀고 `Engine.exe`를 더블클릭하면 게임이 바로 시작됩니다.
+> 별도 설치가 필요하지 않습니다.
+
+### 7-3. 더 높은 품질을 원한다면
+
+완성도 높은 단독 실행 파일(에디터 UI 없음)이 필요하다면, 엔진 소스를 보유한 개발자에게
+`STANDALONE_MODE 1` 빌드를 요청하세요. 그 `Engine.exe`로 교체하면 됩니다.
 
 ---
 

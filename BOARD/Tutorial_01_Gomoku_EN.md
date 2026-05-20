@@ -8,14 +8,14 @@
 ## 🚨 Absolute Rule: Do NOT Touch the Engine Core!
 
 ```
-❌ Never modify any files inside the Engine/ folder.
-   Engine.h, Engine.cpp, SpriteRenderer.h, Transform.h — all sealed. Hands off.
+❌ Never modify any files inside the include/ folder.
+   IEngineAPI.h, IGameLogic.h, GameObject.h — all read-only. Hands off.
 
 ✅ There is exactly ONE file you are allowed to edit.
-   Engine/GameLogic/GameLogic.cpp
+   GameLogic/GameLogic.cpp
 ```
 
-The engine is already complete. Your only job is to write the game rules inside `GameLogic.cpp`. Touching the engine core will break not just this tutorial, but every other game you build on top of it. Please respect this boundary.
+The SDK package does not include engine source code. Your only job is to write the game rules inside `GameLogic/GameLogic.cpp`. Modifying headers in `include/` will be overwritten on the next SDK update. Please respect this boundary.
 
 ---
 
@@ -38,7 +38,7 @@ vertically, or diagonally — wins the game.
 - [Step 4. Win Condition Logic](#step-4-win-condition-logic)
 - [Step 5. UI Feedback](#step-5-ui-feedback)
 - [Step 6. Full Code — Copy and Paste](#step-6-full-code--copy-and-paste)
-- [Step 7. Shipping the Game — Building with STANDALONE_MODE 1](#step-7-shipping-the-game--building-with-standalone_mode-1)
+- [Step 7. Shipping the Game — Packaging Your Files](#step-7-shipping-the-game--packaging-your-files)
 
 ---
 
@@ -50,7 +50,7 @@ Prepare three image files and one sound effect for Gomoku.
 Place them in the following directory:
 
 ```
-Engine/Engine/assets/
+assets/
 ├── black.png     ← Black stone image (e.g., a 64×64 PNG with a black circle)
 ├── white.png     ← White stone image (e.g., a 64×64 PNG with a white circle)
 └── click.wav     ← Stone placement sound effect (a short click)
@@ -62,12 +62,10 @@ Engine/Engine/assets/
 
 ### 1-2. Create the Board Scene
 
-1. Confirm that `STANDALONE_MODE` is set to `0` in `Engine.h`:
-   ```cpp
-   #define STANDALONE_MODE 0   // Must be in Editor mode
-   ```
+1. Double-click `Engine.exe` in the SDK root folder to launch the editor.
+   The SDK build of `Engine.exe` runs in editor mode — no build step required.
 
-2. Build and run the engine (F5).
+2. (A blank viewport is normal at this point — no scene has been loaded yet.)
 
 3. In the **Board Generator** panel, set the following values:
 
@@ -303,7 +301,7 @@ To restart the game, simply click **GameLogic → Reload Now** in the menu bar. 
 
 ## Step 6. Full Code — Copy and Paste
 
-Replace the entire contents of `Engine/GameLogic/GameLogic.cpp` with the code below.
+Replace the entire contents of `GameLogic/GameLogic.cpp` with the code below.
 
 ```cpp
 // GameLogic.cpp — Gomoku (Five in a Row) — Two-Player Implementation
@@ -446,86 +444,60 @@ extern "C" __declspec(dllexport) IGameLogic* CreateGameLogic()
 
 ### Build and Test
 
-1. Build **only the GameLogic project** in Visual Studio (right-click → Build, or Ctrl+B).
-2. If the engine is already running, it will **hot-reload the DLL automatically** within 0.5 seconds.
-   (Check the Output window — `[Gomoku] Gomoku started.` confirms a successful reload.)
-3. Press **[ Play ]** in the menu bar to enter Play Mode.
-4. Click tiles and verify that black and white stones alternate correctly.
-5. Line up 5 stones in a row and confirm the win message appears.
+1. Open `GameLogic/GameLogic_SDK.sln` in Visual Studio 2022.
+2. **Build → Build Solution** (Ctrl+Shift+B). `GameLogic.dll` is placed next to `Engine.exe` automatically.
+3. Run `Engine.exe` and click **GameLogic → Load GameLogic.dll**.
+4. Press **[ Play ]** in the menu bar to enter Play Mode.
+5. Click tiles and verify that black and white stones alternate correctly.
+6. Line up 5 stones in a row and confirm the win message appears.
 
 ---
 
-## Step 7. Shipping the Game — Building with STANDALONE_MODE 1
+## Step 7. Shipping the Game — Packaging Your Files
 
-Let's produce a standalone executable — a clean Gomoku game with no editor UI.
+The SDK does not include `Engine.h`, so you cannot rebuild the engine binary.
+Instead, bundle the files already present in the SDK and ship them as-is.
 
-### 7-1. Verify Assets
+### 7-1. Distribution Checklist
 
-Make sure all required files are in place before building:
-
-```
-Engine/x64/Release/assets/
-├── scene.json    ← The 15×15 scene saved in Step 1
-├── black.png     ← Black stone image
-├── white.png     ← White stone image
-└── click.wav     ← Sound effect
-```
-
-> If the `assets/` folder doesn't exist under `x64/Release/`, copy the entire
-> `Engine/Engine/assets/` folder there.
-
-### 7-2. Flip the Macro
-
-Change exactly one line in `Engine/Engine/Engine.h`:
-
-```cpp
-// Before
-#define STANDALONE_MODE 0
-
-// After
-#define STANDALONE_MODE 1
-```
-
-### 7-3. Release Build
-
-1. Switch the build configuration to **Release** (dropdown at the top of Visual Studio).
-2. **Build → Build Solution** (Ctrl+Shift+B).
-3. Output is generated in `Engine/x64/Release/`.
-
-```
-x64/Release/
-├── Engine.exe      ← Game executable (no editor UI)
-├── GameLogic.dll   ← Gomoku logic
-└── assets/
-    ├── scene.json
-    ├── black.png
-    ├── white.png
-    └── click.wav
-```
-
-### 7-4. Distribution Package
-
-Bundle the four items above into a single folder and share it — that's your finished game!
+Verify that all four items below are present in your delivery package:
 
 ```
 MyGomokuGame/
-├── Engine.exe
-├── GameLogic.dll
+├── Engine.exe          ← The Engine.exe from your SDK (no rebuild needed)
+├── GameLogic.dll       ← Your build output from Step 6
+├── shaders.hlsl        ← 🚨 Required at runtime — omitting this crashes on launch
 └── assets/
-    ├── scene.json
-    ├── black.png
-    ├── white.png
-    └── click.wav
+    ├── scene.json      ← The 15×15 board scene saved in Step 1
+    ├── black.png       ← Black stone image
+    ├── white.png       ← White stone image
+    └── click.wav       ← Sound effect
 ```
 
-### 7-5. Returning to Editor Mode
+### 7-2. Package and Deliver
 
-```cpp
-// Revert Engine.h back to editor mode
-#define STANDALONE_MODE 0
+Place all four items in one folder, compress it into a `.zip`, and share it — you're done!
+
+```
+MyGomokuGame.zip
+└── MyGomokuGame/
+    ├── Engine.exe
+    ├── GameLogic.dll
+    ├── shaders.hlsl
+    └── assets/
+        ├── scene.json
+        ├── black.png
+        ├── white.png
+        └── click.wav
 ```
 
-Rebuild in Debug configuration and the full editor UI is restored.
+> **For the end player:** Unzip, double-click `Engine.exe`, and the game launches immediately.
+> No installer required.
+
+### 7-3. Want a Cleaner Standalone Build?
+
+If you need a version with no editor UI visible to players, ask the engine developer to provide
+a `STANDALONE_MODE 1` build of `Engine.exe` and swap it into your package.
 
 ---
 
