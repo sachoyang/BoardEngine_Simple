@@ -11,6 +11,7 @@
 #include "imgui_impl_dx12.h"
 #include "Transform.h"
 #include "SpriteRenderer.h"
+#include "Label.h"
 #include "LuaManager.h"
 #include "InputManager.h"
 #include "IGameLogic.h"
@@ -951,6 +952,18 @@ void Engine::Render()
             delete obj;
         }
         m_pendingDestroy.clear();
+
+        // Deferred Restart: RestartGame() 요청 시 씬을 다시 로드하고 게임 로직을 재초기화한다.
+        // 입력·순회가 모두 끝난 프레임 끝에서 처리하므로 오브젝트 포인터 무효화가 안전하다.
+        // (deferred destroy 와 동일한 이유 — OnObjectClicked 안에서 호출해도 크래시 없음)
+        if (m_pendingRestart)
+        {
+            m_pendingRestart = false;
+            LoadScene(m_scenePath);         // 씬을 처음 상태로 복원 (모든 오브젝트 재생성)
+            if (m_gameLogic)
+                m_gameLogic->OnLoad(m_gameObjects, this); // 게임 로직 상태 초기화 + API 재주입
+        }
+
         if (m_selectedObjectIdx >= static_cast<int>(m_gameObjects.size()))
             m_selectedObjectIdx = std::max(0, static_cast<int>(m_gameObjects.size()) - 1);
     }
@@ -1191,6 +1204,9 @@ void Engine::Render()
             ImGui::TextUnformatted(m_statusText.c_str());
             ImGui::End();
         }
+
+        // ── 오브젝트 라벨(Label 컴포넌트) 오버레이 — 에디터·스탠드얼론 공통 ──
+        RenderObjectLabels();
 
         ImGui::Render(); // draw data 확정 (CPU only)
     }
@@ -1751,8 +1767,75 @@ void Engine::SetGameStatusText(const std::string& text, float duration)
     m_statusTimer = std::max(0.0f, duration);
 }
 
+void Engine::RestartGame()
+{
+    // 즉시 리로드하지 않고 플래그만 세운다. 실제 처리는 Render() Update 블록 끝에서
+    // (입력·오브젝트 순회가 모두 끝난 뒤) 이뤄지므로 순회 중 포인터 무효화가 없다.
+    m_pendingRestart = true;
+}
+
+void Engine::SetObjectText(GameObject* obj, const std::string& text,
+                           float r, float g, float b)
+{
+    if (!obj) return;
+    // Label 이 없으면 자동 부착 (AddSpriteRenderer 와 동일한 패턴).
+    auto* label = obj->GetComponent<Label>();
+    if (!label)
+    {
+        label = new Label();
+        obj->AddComponent(label);
+    }
+    label->text  = text;
+    label->color = { r, g, b, 1.0f };
+}
+
+void Engine::RenderObjectLabels()
+{
+    // ImGui 프레임 안에서만 호출된다. 배경 드로우리스트는 씬 스프라이트 위,
+    // ImGui 창 아래에 그려지므로 에디터 패널이 라벨을 가릴 수 있어 자연스럽다.
+    ImDrawList* dl   = ImGui::GetBackgroundDrawList();
+    ImFont*     font = ImGui::GetFont();
+
+    for (auto* obj : m_gameObjects)
+    {
+        auto* label = obj->GetComponent<Label>();
+        if (!label || label->text.empty()) continue;
+        auto* tr = obj->GetComponent<Transform>();
+        if (!tr) continue;
+
+        // 월드 → 화면 (ScreenToWorld 의 역변환): screen = (world - camera) * zoom
+        const float sx     = (tr->x - m_cameraX) * m_cameraZoom;
+        const float sy     = (tr->y - m_cameraY) * m_cameraZoom;
+        const float fontPx = label->size * m_cameraZoom;
+        if (fontPx < 1.0f) continue;
+
+        const char* txt = label->text.c_str();
+        const ImVec2 sz  = font->CalcTextSizeA(fontPx, FLT_MAX, 0.0f, txt);
+        const ImVec2 pos = { sx - sz.x * 0.5f, sy - sz.y * 0.5f }; // 중심 정렬
+
+        // 가독성용 아웃라인: 글자 밝기(luminance)에 대비되는 색으로 4방향 그림자를 깐다.
+        const float lum = label->color.x * 0.299f + label->color.y * 0.587f + label->color.z * 0.114f;
+        const ImU32 outline = (lum > 0.5f) ? IM_COL32(0, 0, 0, 230) : IM_COL32(255, 255, 255, 230);
+        const ImU32 main = IM_COL32(
+            static_cast<int>(label->color.x * 255.0f),
+            static_cast<int>(label->color.y * 255.0f),
+            static_cast<int>(label->color.z * 255.0f),
+            static_cast<int>(label->color.w * 255.0f));
+
+        const float o = (fontPx >= 20.0f) ? 2.0f : 1.0f;
+        dl->AddText(font, fontPx, { pos.x - o, pos.y }, outline, txt);
+        dl->AddText(font, fontPx, { pos.x + o, pos.y }, outline, txt);
+        dl->AddText(font, fontPx, { pos.x, pos.y - o }, outline, txt);
+        dl->AddText(font, fontPx, { pos.x, pos.y + o }, outline, txt);
+        dl->AddText(font, fontPx, pos, main, txt);
+    }
+}
+
 void Engine::LoadScene(const std::string& path)
 {
+    // RestartGame() 이 다시 로드할 수 있도록 마지막 씬 경로를 기억한다.
+    m_scenePath = path;
+
     std::ifstream file(GetAbsolutePath(path));
     if (!file.is_open())
         return;
@@ -1792,6 +1875,12 @@ void Engine::LoadScene(const std::string& path)
                 auto* sr = new SpriteRenderer();
                 obj->AddComponent(sr);
                 sr->Deserialize(jComp);
+            }
+            else if (type == "Label")
+            {
+                auto* lb = new Label();
+                obj->AddComponent(lb);
+                lb->Deserialize(jComp);
             }
             // ScriptComponent 는 직렬화 대상 외. 필요 시 "script" 타입 추가 가능.
         }

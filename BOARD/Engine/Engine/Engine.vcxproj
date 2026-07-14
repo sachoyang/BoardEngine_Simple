@@ -143,6 +143,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="IGameLogic.h" />
+    <ClInclude Include="Label.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="nlohmann\json.hpp" />
     <ClInclude Include="LuaManager.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="Label.cpp" />
     <ClCompile Include="LuaManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ResourceManager.cpp" />

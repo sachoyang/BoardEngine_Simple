@@ -292,6 +292,12 @@ BOARD/
 
 ## 튜토리얼
 
+> **참고:** 저장소 기본 `GameLogic/GameLogic.cpp` 에는 **완성된 오목**(승리·무승부 판정, 게임 종료 후 클릭 재대국)이 이미 구현되어 있습니다. 15×15 / Tile Size 40 보드를 만들어 `Load GameLogic.dll` → `[ Play ]` 로 바로 즐길 수 있습니다.
+>
+> **엔진으로 만든 예제 게임 모음:** [`Examples/`](BOARD/Examples/README.md) — 오목(`Gomoku_GameLogic.cpp`)과 체스(`Chess_GameLogic.cpp`)가 들어 있습니다. `GameLogic.cpp` 를 갈아끼우는 방법과 **만든 게임을 실행하는 법**을 Examples/README.md 에 정리해 두었습니다.
+>
+> **검증 체크리스트:** [`VERIFICATION.md`](BOARD/VERIFICATION.md) — 빌드·엔진 개선(RestartGame, Label)·오목·체스를 VS2022 에서 확인하는 단계별 목록입니다(체스 체크메이트 재현 시나리오 포함).
+
 | 문서 | 내용 |
 |------|------|
 | [`Tutorial_01_Gomoku.md`](Tutorial_01_Gomoku.md) | 오목(五目) 2인 대전 게임 제작 (한국어) |

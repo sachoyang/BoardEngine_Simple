@@ -41,4 +41,20 @@ public:
     // 새로운 호출은 이전 텍스트와 타이머를 즉시 교체한다.
     // duration 이 0 이하이면 텍스트를 즉시 지운다.
     virtual void SetGameStatusText(const std::string& text, float duration = 3.0f) = 0;
+
+    // 현재 씬(마지막으로 로드한 scene.json)을 처음 상태로 다시 로드하고
+    // 로드된 GameLogic 의 OnLoad() 를 재호출한다 — 보드게임의 "재대국(Rematch)" 한 줄 구현.
+    // Godot 의 SceneTree.reload_current_scene() 에서 착안했다.
+    // 실제 리로드는 즉시 일어나지 않고 현재 프레임 끝(Deferred)에 안전하게 처리되므로,
+    // Update() / OnObjectClicked() 순회 도중에 호출해도 포인터 무효화 크래시가 없다.
+    // 따라서 이 호출 직후 objects/clickedObj 포인터를 더 사용하지 말고 즉시 return 하라.
+    virtual void RestartGame() = 0;
+
+    // 오브젝트 위치(Transform 중심)에 텍스트를 겹쳐 표시한다 (Label 컴포넌트를 자동 부착).
+    // 스프라이트만으로 종류 구분이 어려운 게임에서 사용한다 — 예: 체스 말에 "N"(나이트) 표시.
+    // text 가 비어 있으면 라벨을 지운다. (r,g,b) 는 글자 색(0~1, 기본 흰색).
+    // 엔진이 글자 밝기에 맞춰 대비 아웃라인을 자동으로 그려 어떤 타일 위에서도 잘 보인다.
+    // Unity 의 TextMesh / Godot 의 Label 에서 착안했다.
+    virtual void SetObjectText(GameObject* obj, const std::string& text,
+                               float r = 1.0f, float g = 1.0f, float b = 1.0f) = 0;
 };

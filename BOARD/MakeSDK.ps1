@@ -30,7 +30,8 @@ $SDK_HEADERS = @(
     "GameObject.h",
     "Component.h",
     "Transform.h",
-    "SpriteRenderer.h"
+    "SpriteRenderer.h",
+    "Label.h"
 )
 
 # -- Utilities -----------------------------------------------------------------
@@ -234,6 +235,7 @@ $vcxproj = @'
     <ClInclude Include="..\include\Component.h" />
     <ClInclude Include="..\include\Transform.h" />
     <ClInclude Include="..\include\SpriteRenderer.h" />
+    <ClInclude Include="..\include\Label.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameLogic.cpp" />

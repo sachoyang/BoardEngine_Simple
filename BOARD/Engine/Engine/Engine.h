@@ -71,6 +71,9 @@ public:
     void        PlayAudio(const std::string& filePath) override;
     void        SetSpriteTexture(GameObject* obj, const std::string& texturePath) override;
     void        SetGameStatusText(const std::string& text, float duration) override;
+    void        RestartGame() override;
+    void        SetObjectText(GameObject* obj, const std::string& text,
+                              float r, float g, float b) override;
 
 private:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -95,6 +98,10 @@ private:
 
     // Dear ImGui 컨텍스트와 Win32/DX12 백엔드를 초기화한다.
     void InitImGui();
+
+    // Label 컴포넌트를 가진 모든 오브젝트의 텍스트를 화면(월드→스크린 투영)에 그린다.
+    // ImGui 프레임 안에서 호출해야 한다(배경 드로우리스트 사용).
+    void RenderObjectLabels();
 
     // GPU 작업이 끝날 때까지 CPU를 블로킹하는 동기화 유틸리티
     void WaitForPreviousFrame();
@@ -217,6 +224,12 @@ private:
     // --- Deferred Destroy ---
     // Destroy() 요청을 즉시 삭제하지 않고 여기에 쌓아 프레임 끝에 일괄 처리한다.
     std::vector<GameObject*> m_pendingDestroy;
+
+    // --- Deferred Restart (RestartGame) ---
+    // 마지막으로 LoadScene() 에 전달된 씬 경로. RestartGame() 이 이 씬을 다시 로드한다.
+    std::string m_scenePath      = "assets/scene.json";
+    // RestartGame() 이 요청되면 true. 프레임 끝에서 씬 리로드 + OnLoad 재호출 후 false 로 되돌린다.
+    bool        m_pendingRestart = false;
 
     // --- GameLogic DLL & Hot Reload ---
     HMODULE     m_gameLogicModule  = nullptr;
